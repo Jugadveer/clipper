@@ -134,11 +134,29 @@ class Recorder:
                     d = float(parts[2]) - float(parts[1])
                 except ValueError:
                     continue
+                if d <= 0.2:
+                    continue
                 p = self.rec / Path(parts[0]).name
-                if p.exists() and d > 0.2:
+                # stream time counts EVERY segment ever written: old ones are deleted to save disk,
+                # and counting only the files still there ran the clock backwards and stalled the loop
+                if p.exists():
                     out.append((p, t, d))
-                    t += d
+                t += d
         return out
+
+    def recorded(self) -> float:
+        """Seconds recorded so far, including segments already deleted."""
+        t = 0.0
+        for csv in sorted(self.rec.glob("run*.csv")):
+            for line in csv.read_text(encoding="utf-8", errors="replace").splitlines():
+                parts = line.rsplit(",", 2)
+                try:
+                    d = float(parts[2]) - float(parts[1])
+                except (ValueError, IndexError):
+                    continue
+                if d > 0.2:
+                    t += d
+        return t
 
 
 # ----------------------------------------------------------------------------------- whisper
@@ -239,7 +257,9 @@ def live(src: str, step: float = 90, lag: float = 25, floor: float = 3.0, max_ju
     streamer = streamer or meta_src.get("uploader") or meta_src.get("channel") or ""
     write_json(base / "source.info.json", {k: meta_src.get(k) for k in ("title", "uploader", "channel",
                                                                           "webpage_url", "is_live", "id")})
-    log(f"LIVE: {title!r} by {streamer or '?'}  step={step:.0f}s lag={lag:.0f}s floor={floor}")
+    if style == "mix":
+        style = "mix-fast"                      # engine looks take minutes per clip; see styles.MIX_FAST
+    log(f"LIVE: {title!r} by {streamer or '?'}  step={step:.0f}s lag={lag:.0f}s floor={floor} style={style}")
 
     state = read_json(base / "state.json", {}) or {}
     words: list[dict] = state.get("words", [])
@@ -250,7 +270,6 @@ def live(src: str, step: float = 90, lag: float = 25, floor: float = 3.0, max_ju
     spans: list[list[float]] = state.get("spans", [])
     rows: list[dict] = read_json(out_dir / "clips.json", []) or []
     spend0 = judge.spent()
-    t_start = time.time()
 
     from concurrent.futures import ThreadPoolExecutor
     pool = ThreadPoolExecutor(max(1, jobs))
@@ -269,15 +288,19 @@ def live(src: str, step: float = 90, lag: float = 25, floor: float = 3.0, max_ju
             row["stream_end"] = round(row["source_end"] + off, 2)
             row["stream_ts"] = f"{fmt_ts(row['stream_start'])}-{fmt_ts(row['stream_end'])}"
             row["rendered_at"] = time.strftime("%H:%M:%S")
-            # seconds from the moment's end reaching our disk to its clip being ready
-            row["latency_s"] = round(time.time() - (t_start + row["stream_end"] / readrate), 1)
+            # seconds from the moment's end reaching our disk to its clip being ready: the segment
+            # holding it was closed (mtime) when its own end was recorded
+            end = row["stream_end"]
+            seg = next(((sp, s0, d) for sp, s0, d in recorder.segments() if s0 <= end < s0 + d), None)
+            row["latency_s"] = (round(time.time() - (seg[0].stat().st_mtime - (seg[1] + seg[2] - end) / readrate), 1)
+                                if seg and seg[0].exists() else None)
             with lock:
                 rows.append(row)
                 rows.sort(key=lambda r: r["stream_start"])
                 cli.write_outputs(out_dir, rows, title, streamer,
                                   f"live: LLM spend this session ${judge.spent() - spend0:.4f}")
-            log(f"CLIP {n}: {row['title']!r} at {row['stream_ts']} (v={row['virality']}), "
-                f"ready {row['latency_s']:.0f}s after it happened")
+            when = f", ready {row['latency_s']:.0f}s after it happened" if row["latency_s"] is not None else ""
+            log(f"CLIP {n}: {row['title']!r} at {row['stream_ts']} (v={row['virality']}){when}")
         except Exception as e:                   # one failed render never stops the stream
             log(f"render {name} failed: {e}")
         finally:
@@ -294,7 +317,7 @@ def live(src: str, step: float = 90, lag: float = 25, floor: float = 3.0, max_ju
     try:
         while True:
             segs = recorder.segments()
-            total = sum(d for _, _, d in segs)
+            total = recorder.recorded()
             ended = recorder.ended
             if max_minutes and total >= max_minutes * 60 and not ended:
                 log(f"reached --max-minutes {max_minutes}; stopping the recorder")

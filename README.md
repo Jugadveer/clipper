@@ -85,7 +85,9 @@ python -m clipper live "https://www.twitch.tv/somestreamer" --style mix
 It records the stream continuously and checks every 90 seconds of new stream for good moments.
 A clip is ready a few minutes after the moment happens; nothing waits for the stream to end. Clips
 appear in `work\<id>\live\clips\`. Stop it with Ctrl+C, or add `--max-minutes 60` or `--clips 20`.
-If you restart it on the same link, it carries on where it stopped.
+If you restart it on the same link, it carries on where it stopped. In live mode `--style mix` rotates
+only the fast looks (viral, pop, karaoke; hormozi and clean for podcasts), which render in about a
+minute; the engine looks take several minutes per clip, so ask for one by name only if you can wait.
 
 ### Useful options
 

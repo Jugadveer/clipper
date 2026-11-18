@@ -55,6 +55,9 @@ ENGINE = ("speaker", "ui", "bigword", "tiered", "story")
 ACCENT_CYCLE = ["lime", "yellow", "red", "pink", "cyan"]
 MIX = {"stream": ["viral", "bigword", "pop", "speaker", "karaoke"],
        "podcast": ["hormozi", "speaker", "ui", "clean", "tiered", "bigword", "story"]}
+# engine looks render through a headless browser (minutes per clip); a live stream wants its clips
+# soon after the moment, so live mode's "mix" rotates only the ffmpeg presets (about a minute each)
+MIX_FAST = {g: [n for n in names if n not in ENGINE] for g, names in MIX.items()}
 CHOICES = ["auto", "mix", *PRESETS, *ENGINE]
 
 
@@ -64,8 +67,9 @@ def pick(style: str, genre: str, index: int) -> tuple[str, dict]:
         style = "viral" if genre == "stream" else "hormozi"
     name = style
     accent = None
-    if style == "mix":
-        names = MIX.get(genre, MIX["stream"])
+    if style in ("mix", "mix-fast"):
+        table = MIX_FAST if style == "mix-fast" else MIX
+        names = table.get(genre, table["stream"])
         name = names[index % len(names)]
         accent = ACCENT_CYCLE[(index * 2 + 1) % len(ACCENT_CYCLE)]
     if name in ENGINE:
