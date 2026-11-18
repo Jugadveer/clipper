@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14120f">
+<title>Clipper Studio</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='3' y='3' width='10' height='10' rx='2' fill='%23ff5b2e'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;600;700&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css?v=5">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-make" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.6 7.6 20 18M8.6 16.4 20 6"/></symbol>
+  <symbol id="i-clips" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="11" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="18" width="7" height="3" rx="1.2"/></symbol>
+  <symbol id="i-post" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 14h3"/></symbol>
+  <symbol id="i-req" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></symbol>
+  <symbol id="i-set" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v12m-5-5 5 5 5-5M5 20h14"/></symbol>
+</svg>
+
+<aside class="rail" aria-label="Main">
+  <div class="brand"><i></i>Clipper <small>studio</small></div>
+  <nav class="nav">
+    <a href="#make"><svg><use href="#i-make"/></svg>Make<span class="count" data-count="running"></span></a>
+    <a href="#clips"><svg><use href="#i-clips"/></svg>Clips<span class="count" data-count="new"></span></a>
+    <a href="#posting"><svg><use href="#i-post"/></svg>Posting<span class="count" data-count="queued"></span></a>
+    <a href="#requests"><svg><use href="#i-req"/></svg>Requests<span class="count" data-count="inbox"></span></a>
+    <a href="#settings"><svg><use href="#i-set"/></svg>Settings</a>
+  </nav>
+  <div class="now" id="now"></div>
+</aside>
+
+<main>
+  <div class="mobile-top"><div class="brand"><i></i>Clipper <small>studio</small></div><span id="mstatus" class="hint"></span></div>
+
+  <!-- ============================================================ MAKE -->
+  <section class="page" id="make">
+    <div class="head">
+      <div><h1>Make</h1><p class="lede">Paste a stream, VOD or podcast and get shorts. Or turn a script into a GTA video.</p></div>
+      <div class="seg" role="group" aria-label="What to make">
+        <button type="button" data-mode="clip" aria-pressed="true">Shorts from a link</button>
+        <button type="button" data-mode="gta" aria-pressed="false">GTA video</button>
+      </div>
+    </div>
+
+    <form id="clipform" class="slate" autocomplete="off">
+      <div class="slate-top">
+        <label class="sr" for="src">Link or file</label>
+        <div class="paste">
+          <input id="src" name="source" type="text" inputmode="url" placeholder="https://youtube.com/watch?v=…   ·   twitch.tv/videos/…   ·   D:\streams\vod.mp4">
+          <button type="button" class="btn big" id="pastebtn">Paste</button>
+        </div>
+        <div class="probe" id="probe"></div>
+      </div>
+      <div class="slate-opts">
+        <div class="field"><span>What is it?</span>
+          <div class="chips" data-name="genre">
+            <button type="button" class="chip" data-v="" aria-pressed="true">Let it decide</button>
+            <button type="button" class="chip" data-v="stream" aria-pressed="false">Stream or gaming</button>
+            <button type="button" class="chip" data-v="podcast" aria-pressed="false">Podcast or interview</button>
+          </div>
+        </div>
+        <div class="field"><span>How many shorts?</span>
+          <div class="chips" data-name="clips">
+            <button type="button" class="chip" data-v="0" aria-pressed="true">Auto</button>
+            <button type="button" class="chip" data-v="10" aria-pressed="false">10</button>
+            <button type="button" class="chip" data-v="20" aria-pressed="false">20</button>
+            <button type="button" class="chip" data-v="30" aria-pressed="false">30</button>
+            <button type="button" class="chip" data-v="50" aria-pressed="false">50</button>
+          </div>
+          <small id="autohint">Auto makes about one per three minutes of video.</small>
+        </div>
+        <div class="field"><span>Caption style</span>
+          <div class="styles" data-name="style">
+            <button type="button" class="style s-mix" data-v="mix" aria-pressed="true"><span class="w"><b>Every</b> clip <b>new</b></span><span class="n">mix</span></button>
+            <button type="button" class="style s-viral" data-v="viral" aria-pressed="false"><span class="w">He <b>actually</b> did it</span><span class="n">viral</span></button>
+            <button type="button" class="style s-pop" data-v="pop" aria-pressed="false"><span class="w">No <b>way</b> bro</span><span class="n">pop</span></button>
+            <button type="button" class="style s-karaoke" data-v="karaoke" aria-pressed="false"><span class="w">Chat <b>said</b> go</span><span class="n">karaoke</span></button>
+            <button type="button" class="style s-hormozi" data-v="hormozi" aria-pressed="false"><span class="w">Most <b>people</b></span><span class="n">hormozi</span></button>
+            <button type="button" class="style s-clean" data-v="clean" aria-pressed="false"><span class="w">Here's the <b>truth</b></span><span class="n">clean</span></button>
+          </div>
+          <small>Mix changes the look clip to clip, so a channel's uploads don't all match.</small>
+        </div>
+        <label class="field"><span>Only clip moments like… <em class="hint">(optional)</em></span>
+          <input name="prompt" placeholder="every time he rages at chat">
+          <small>Leave empty to let it find the best moments on its own.</small>
+        </label>
+        <details class="more">
+          <summary>More options</summary>
+          <div class="grid3">
+            <label class="field"><span>Layout</span><select name="layout">
+              <option value="auto">Auto</option><option value="split">Game + cam split</option><option value="single">Single, follow the action</option>
+              <option value="speaker">Follow the speaker</option><option value="stack">Two speakers stacked</option><option value="fit">Whole frame, blurred fill</option></select></label>
+            <label class="field"><span>Split order</span><select name="split_order">
+              <option value="game_top">Game on top</option><option value="cam_top">Cam on top</option></select></label>
+            <label class="field"><span>Moment picker</span><select name="judge">
+              <option value="llm">AI, looks at frames (~$0.0007 a short)</option><option value="llm-text-only">AI, transcript only (about half)</option>
+              <option value="local">Free, signals only ($0)</option></select></label>
+            <label class="field"><span>Streamer or speaker name</span><input name="streamer" placeholder="read from the video"></label>
+            <label class="field"><span>Minimum score</span><input name="min_virality" type="number" min="0" max="99" value="50"></label>
+            <label class="field"><span>Render at once</span><input name="jobs" type="number" min="1" max="6" value="3"></label>
+            <div class="checks">
+              <label class="check"><input type="checkbox" name="no_cold_open"><span>No cold open<small>Don't replay the punchline first</small></span></label>
+              <label class="check"><input type="checkbox" name="keep_dead_air"><span>Keep pauses<small>Don't jump-cut silent gaps</small></span></label>
+              <label class="check"><input type="checkbox" name="keep_source"><span>Keep the download<small>Normally deleted to save disk</small></span></label>
+            </div>
+          </div>
+        </details>
+      </div>
+      <div class="slate-foot">
+        <span class="hint" id="clipnote">Runs on this PC. Jobs go one at a time; you can close the page.</span>
+        <button class="btn go big" type="submit" id="clipgo">Start cutting</button>
+      </div>
+    </form>
+
+    <form id="gtaform" class="slate" hidden>
+      <div class="slate-top stack">
+        <div class="grid2">
+          <div class="field"><span>Script</span>
+            <label class="drop" id="scriptdrop"><input type="file" name="script" accept=".txt,text/plain" hidden>
+              <b>Choose the .txt script</b><br><span class="hint">or drop it here, or paste it below</span></label>
+          </div>
+          <div class="field"><span>Voiceover <em class="hint">(optional)</em></span>
+            <label class="drop" id="vodrop"><input type="file" name="voiceover" accept="audio/*,.mp3,.m4a,.wav,.ogg" hidden>
+              <b>Choose a recording</b><br><span class="hint">mp3, m4a, wav or ogg. Without one, the free voice reads it.</span></label>
+          </div>
+        </div>
+        <label class="field"><span>Or paste the script</span>
+          <textarea name="script_text" rows="7" placeholder="title: 15 Things You NEED To Know Before GTA 6&#10;hook: …&#10;&#10;[1] The map&#10;Leonida is…"></textarea>
+          <small>Same format as the files in gta/scripts. A recorded read is lined up with the script word by word.</small>
+        </label>
+        <label class="check"><input type="checkbox" name="no_music"><span>No music bed</span></label>
+      </div>
+      <div class="slate-foot">
+        <span class="hint">About 15-25 minutes for a 10-minute video. $0.</span>
+        <button class="btn go big" type="submit">Make the video</button>
+      </div>
+    </form>
+
+    <div class="sect">
+      <div class="row between"><h2>Queue</h2><span class="hint" id="spend"></span></div>
+      <div class="jobs" id="jobs"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================ CLIPS -->
+  <section class="page" id="clips">
+    <div class="head">
+      <div><h1>Clips</h1><p class="lede">Watch, rename and schedule. Select several to schedule them in one go.</p></div>
+      <div class="filters"><input class="search" id="q" type="search" placeholder="Search titles and sources"></div>
+    </div>
+    <div class="tabs" id="cliptabs" role="group" aria-label="Filter">
+      <button type="button" data-f="new" aria-pressed="true">To review<span></span></button>
+      <button type="button" data-f="queued" aria-pressed="false">Scheduled<span></span></button>
+      <button type="button" data-f="posted" aria-pressed="false">Posted<span></span></button>
+      <button type="button" data-f="skipped" aria-pressed="false">Skipped<span></span></button>
+      <button type="button" data-f="all" aria-pressed="false">All<span></span></button>
+    </div>
+    <div id="lib"></div>
+  </section>
+
+  <!-- ============================================================ POSTING -->
+  <section class="page" id="posting">
+    <div class="head">
+      <div><h1>Posting</h1><p class="lede">Uploads go to YouTube as private with a publish time, so they go public on schedule even with this PC off.</p></div>
+      <span class="status-line" id="ytline"></span>
+    </div>
+    <div class="split">
+      <div>
+        <div class="row between"><h2>Coming up</h2><span class="hint" id="quota"></span></div>
+        <div class="days" id="days"></div>
+        <div class="sect" id="postedwrap"><h2>Posted</h2><div id="posted"></div></div>
+      </div>
+      <div>
+        <div class="panel-box stack">
+          <div><h2>Posting times</h2><p class="hint">New uploads take the first free time, every day.</p></div>
+          <div class="times" id="times"></div>
+          <div class="row"><input type="time" id="newtime" style="max-width:150px"><button class="btn sm" id="addtime">Add time</button></div>
+          <label class="field"><span>Schedule automatically</span>
+            <select id="autopost"><option value="0">No, ask first</option><option value="85">Shorts scoring 85+</option><option value="75">Shorts scoring 75+</option><option value="65">Shorts scoring 65+</option></select>
+            <small>High-scoring shorts from Telegram requests go straight onto the schedule.</small></label>
+          <label class="check"><input type="checkbox" id="shortstag"><span>Add #shorts to short titles</span></label>
+        </div>
+        <div class="panel-box">
+          <div class="row between"><h2>What's working</h2><button class="btn sm" id="refstats">Refresh from YouTube</button></div>
+          <div id="perf"></div>
+          <h3 style="margin-top:22px">From the research</h3>
+          <ul class="notes" id="research"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ REQUESTS -->
+  <section class="page" id="requests">
+    <div class="head"><div><h1>Requests</h1><p class="lede">What people asked for through the Telegram bot, and GTA topics waiting for Claude to write.</p></div></div>
+    <div class="split">
+      <div><h2>From Telegram</h2><div class="feed" id="feed"></div></div>
+      <div>
+        <div class="panel-box stack">
+          <div><h2>Topics for Claude</h2><p class="hint">A GTA video needs a researched, fact-checked script. Claude writes these the next time Claude Code is open; the video then renders by itself.</p></div>
+          <form class="row" id="topicform"><input class="grow" name="topic" placeholder="e.g. every hidden detail in trailer 2"><button class="btn">Add</button></form>
+          <div class="feed" id="inbox"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ SETTINGS -->
+  <section class="page" id="settings">
+    <div class="head"><div><h1>Settings</h1><p class="lede" id="setlede"></p></div></div>
+    <div id="setbody"></div>
+  </section>
+</main>
+
+<nav class="tabbar" aria-label="Main">
+  <a href="#make"><svg><use href="#i-make"/></svg>Make<span class="pip" data-pip="running" hidden></span></a>
+  <a href="#clips"><svg><use href="#i-clips"/></svg>Clips<span class="pip" data-pip="new" hidden></span></a>
+  <a href="#posting"><svg><use href="#i-post"/></svg>Posting</a>
+  <a href="#requests"><svg><use href="#i-req"/></svg>Requests<span class="pip" data-pip="inbox" hidden></span></a>
+  <a href="#settings"><svg><use href="#i-set"/></svg>Settings</a>
+</nav>
+
+<div class="bulk" id="bulk" role="region" aria-label="Selection">
+  <b id="bulkn"></b>
+  <button class="btn sm go" id="bulkpost">Schedule</button>
+  <button class="btn sm" id="bulkskip">Skip</button>
+  <button class="btn sm" id="bulkclear" aria-label="Clear selection"><svg><use href="#i-x"/></svg></button>
+</div>
+
+<div class="drawer" id="drawer" aria-modal="true" role="dialog">
+  <div class="scrim" data-close></div>
+  <div class="panel" id="dpanel">
+    <button class="btn sm close" data-close aria-label="Close"><svg><use href="#i-x"/></svg></button>
+    <div class="player" id="dplayer"><video id="dvideo" controls playsinline preload="metadata"></video></div>
+    <div class="body">
+      <div class="facts" id="dfacts"></div>
+      <div class="why" id="dwhy"></div>
+      <label class="field"><span>Title</span><input id="dtitle" maxlength="100"><div class="counter" id="dcount"></div></label>
+      <div class="variants" id="dvariants"></div>
+      <label class="field"><span>Description</span><textarea id="ddesc" rows="6"></textarea></label>
+      <label class="field"><span>Tags</span><textarea id="dtags" rows="2"></textarea><small>Comma separated. YouTube allows 500 characters in total.</small></label>
+      <div class="row">
+        <button class="btn" id="dgen">Write new title ideas (free)</button>
+        <a class="btn quiet" id="ddl"><svg><use href="#i-down"/></svg>Download</a>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <button class="btn go" id="dpost"></button>
+        <button class="btn" id="dskip"></button>
+        <span class="grow"></span>
+        <button class="btn quiet" id="dsave">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/static/app.js?v=5"></script>
+</body>
+</html>

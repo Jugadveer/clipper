@@ -1,0 +1,27 @@
+# ---- never in git: per-machine data, secrets, downloads
+.env
+work/
+SHORTS/
+research/
+exp.sh
+__pycache__/
+*.pyc
+*.part
+node_modules/
+
+# ---- models and fonts that are either huge or not ours to redistribute
+# (Whisper and the PANNs checkpoint download themselves on first use)
+assets/models/whisper-*/
+assets/models/*.pth
+assets/emoji/
+clipper/engine/web/fonts/seguiemj.ttf
+
+# ---- studio: secrets and per-machine state
+web/client_secret.json
+web/youtube_token.json
+web/state/
+web/bin/
+
+# ---- bot mailbox: generated deploy config
+mailbox/wrangler.toml
+mailbox/.wrangler/

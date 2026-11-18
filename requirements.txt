@@ -1,0 +1,18 @@
+# Install torch FIRST, from PyTorch's own index, so it gets the NVIDIA GPU build (see README):
+#   py -m pip install torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu121
+# then everything else:
+#   py -m pip install -r requirements.txt
+numpy>=2.0
+scipy>=1.13
+opencv-python>=4.10
+soundfile>=0.12
+faster-whisper>=1.1.0
+yt-dlp>=2026.8.19
+requests>=2.31
+pillow>=10.0
+fonttools>=4.50
+emoji>=2.10
+edge-tts>=7.0
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
